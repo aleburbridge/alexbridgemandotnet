@@ -1,108 +1,105 @@
-var numberTimer;
-var blankSpace;
-var numberlistlength = 3;
-let answerBox = document.getElementById("answer");
-numberArray = []
-answerArray = []
+let numberTimer;
+let blankSpace;
+let numberArray;
+let numberArrayLength;
+let answerArray;
 
+const rightWrongDisplay = document.getElementById("rightWrongDisplay");
+const answerInput = document.getElementById("answer_input");
+const showNumbersButton = document.getElementById("show_numbers_button");
+const lengthCount = document.getElementById("lengthCount");
+const numberDisplay = document.getElementById("numberDisplay");
+const correctnessDisplay = document.getElementById("correctness_display");
+const lengthDisplay = document.getElementById("length_display");
 
+let userAnswer
+let correctAnswer
 
-function increaseLength() {
-    numberlistlength ++
+let isGameOver = false;
+
+answerInput.addEventListener("keydown", function (e) {
+    if (e.code === "Enter") { 
+        let correct = checkAnswer(e.target.value);
+        if (correct) {
+            correctnessDisplay.innerHTML = "Correct! The numbers were " + numberArray
+            showNumbersButton.disabled = false;
+            answerInput.value = "";
+            lengthDisplay.innerHTML = "Length: " + numberArrayLength;
+        } else {
+            correctnessDisplay.innerHTML = `Incorrect.\nYour answer: ${userAnswer}\nCorrect answer: ${correctAnswer}`
+        }
+    }
+});
+
+function initializeGame() {
+    numberArray = []
+    numberArrayLength = 3;
+    answerArray = []
+    answerInput.disabled = true;
+    lengthDisplay.innerHTML = "Length: " + numberArrayLength;
+    showNumbersButton.innerHTML = "Show Numbers";
 }
 
-function numberTimerFunction() {
-    numberTimer = setInterval(randomNumber, 1000);
-    lengthCount();
+function populateNumberArray() {
+    numberArray = [];
+    for (let i = 0; i < numberArrayLength; i++) {
+        var currentNumber = Math.floor((Math.random() * 9));
+        numberArray.push(currentNumber)
+    }
+    numberArrayLength++;
 }
 
+let t;
 
-
-function randomNumber() {
-    // generates random number, displays it, then pushes it to array
-    var currentNumber = Math.floor((Math.random() * 9));
-    document.getElementById("numberDisplay").innerHTML = currentNumber;
-    setTimeout(function(){ document.getElementById("numberDisplay").innerHTML = "&nbsp;"; }, 500);
-    numberArray.push(currentNumber)
-    returnLoop(); 
-}
-
-
-function returnLoop () {
-    var text = document.getElementById("rightWrongDisplay");
-    text.innerHTML = "&nbsp;"
-    if (numberArray.length < numberlistlength) { 
+function flashEachNumber(count) {
+    if (count >= numberArray.length) {
+        clearInterval(t);
+        answerInput.disabled = false;
         return;
-    } else {
-        clearInterval(numberTimer);
-
     }
+
+    numberDisplay.innerHTML = numberArray[count];
+    numberDisplay.style.visibility = 'visible';
+
+    // Hide the number after 250ms
+    setTimeout(() => {
+        numberDisplay.style.visibility = 'hidden';
+    }, 500);
 }
 
-function arrayCheck(array1, array2) {
-    for (i=0; i < array1.length; i++) {
-        if (array1[i] === array2[i]) {
-            continue
-        } else {
-            return false;
-        }
-    } 
-    return true;
-} 
-
-// changes html element to 'correct' or 'incorrect'
-function bigIfTrue() {
-    var text = document.getElementById("rightWrongDisplay");
-    
-    if (answerArray.length === numberlistlength) {
-        var numberString = numberArray.toString();
-        var answerString = answerArray.toString();
-
-        if (arrayCheck(numberArray, answerArray)) {
-            text.innerHTML = "Correct! The order was " + numberString.split(',').join(', ');
-            increaseLength();
-            numberArray = [];
-            answerArray = [];
-        } else {
-            text.innerHTML = "Incorrect. The order was " + numberString.split(',').join(', ') + "\n Your answer was " + answerString.split(',').join(', ');
-            gameOver();
-        }
+function startRound() {
+    if (isGameOver) {
+        initializeGame();
     }
+    console.log("starting..")
+    numberDisplay.innerHTML = "&nbsp;";
+    correctnessDisplay.innerHTML = "";
+    answerInput.disabled = true;
+    showNumbersButton.disabled = true;
+    populateNumberArray();
+    let count = 0;
+    t = setInterval(function() {
+        flashEachNumber(count);
+        count++;
+    }, 1000);
 }
 
-// displays length of number string
-function lengthCount() {
-    var text = document.getElementById("lengthCount");
-    text.innerHTML = "Length: " + JSON.stringify(numberlistlength);
-}
-
-// input check!
-function inputCheck() {
-    var x, text;
-    x = parseInt(document.getElementById("answer").value);
-
-    answerArray.push(x);
-    console.log(answerArray);
+function checkAnswer(userInput) {
+    var numberString = numberArray.join('');
+    if (userInput === numberString) {
+        return true;
+    }
+    userAnswer = userInput;
+    gameOver();
 }
 
 function gameOver() {
-    var text = document.getElementById("numberDisplay");
-    var button = document.getElementById("showNumbers");
-    numberArray = []
-    answerArray = []
-
-    numberlistlength = 3
-    text.innerHTML = "Game Over!"
+    numberDisplay.style.visibility = "visible";
+    numberDisplay.innerHTML = "Game Over!";
+    showNumbersButton.innerHTML = "Try Again";
+    showNumbersButton.disabled = false;
+    correctAnswer = numberArray
+    isGameOver = true;
 }
 
-// auto submit & clear input 
-var text = document.getElementById("answer");
-var answerButton = document.getElementById("answerButton");
-var clearButton = document.getElementById("clearButton");
-text.onkeyup = function() {
-    if (text.value.length == 1) {
-        answerButton.click();
-        clearButton.click();
-        bigIfTrue();
-  }
-}
+initializeGame();
